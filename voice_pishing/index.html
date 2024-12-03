@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보이스피싱 탐지기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(145deg, #000000, #1a1a1a);
+      color: white;
+      font-family: 'Pretendard-Regular', sans-serif;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .navbar .logo {
+      list-style: none;
+    }
+
+    .navbar .logo a {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 30px;
+    }
+
+    .navbar .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .navbar .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .center-container {
+      width: 90%;
+      max-width: 1200px;
+      margin-top: 100px;
+      padding: 60px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 타이틀 섹션 스타일 개선 */
+    .title-section {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-size: 3.5em;
+      margin-bottom: 30px;
+      background: linear-gradient(45deg, #ffffff, #e6e6e6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      max-width: 800px;
+      margin: 0 auto;
+      font-size: 1.2em;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.8);
+      position: relative;
+      padding: 20px;
+    }
+
+    .subtitle::before, .subtitle::after {
+      content: '';
+      position: absolute;
+      height: 1px;
+      width: 100px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .subtitle::before {
+      top: 0;
+    }
+
+    .subtitle::after {
+      bottom: 0;
+    }
+
+    /* 기능 섹션 스타일 개선 */
+    .features-section {
+      margin-top: 60px;
+    }
+
+    .features-title {
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 40px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      padding: 20px;
+    }
+
+    .feature-item {
+      text-align: center;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .feature-item:hover {
+      transform: translateY(-10px);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .image-container {
+      width: 140px;
+      height: 140px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .feature-item:hover .image-container {
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+      background: rgba(255, 255, 255, 1);
+    }
+
+    .feature-title {
+      font-size: 1.3em;
+      color: white;
+      margin: 15px 0;
+    }
+
+    .feature-description {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+
+    @font-face {
+      font-family: 'Pretendard-Regular';
+      src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <li><a href="index.html">Voice Phishing Detector</a></li>
+    </div>
+    <ul class="nav-links">
+      <li><a href="check.html">조회하기</a></li>
+      <li><a href="ex.html">신고하기</a></li>
+      <li><a href="analyze.html">분석하기</a></li>
+    </ul>
+  </div>
+  
+  <div class="center-container">
+    <div class="title-section">
+      <h1>Voice Phishing Detector</h1>
+      <div class="subtitle">
+        보이스피싱 피해 방지를 위해 만들어진 탐지 프로그램으로<br>
+        의심 계좌번호나 전화번호를 조회 또는 신고, 보이스피싱 의심 통화 내용 분석까지 할 수 있습니다.
+      </div>
+    </div>
+
+    <div class="features-section">
+      <div class="features-grid">
+        <div class="feature-item" onclick="showFeatureInfo('feature1')">
+          <div class="image-container">
+            <img src="search.png" alt="조회하기" width="80" height="80">
+          </div>
+          <h3 class="feature-title">실시간 조회</h3>
+          <p class="feature-description">
+            빠르고 정확한 API 기반 조회 시스템으로<br>
+            의심 계좌 및 전화번호를 실시간으로 확인하세요
+          </p>
+        </div>
+
+        <div class="feature-item" onclick="showFeatureInfo('feature2')">
+          <div class="image-container">
+            <img src="declaration.png" alt="신고하기" width="90" height="90">
+          </div>
+          <h3 class="feature-title">신속한 신고</h3>
+          <p class="feature-description">
+            의심되는 사례를 즉시 신고하고<br>
+            다른 사용자들을 보호하는데 동참하세요
+          </p>
+        </div>
+
+        <div class="feature-item" onclick="showFeatureInfo('feature3')">
+          <div class="image-container">
+            <img src="data-analysis.png" alt="분석하기" width="80" height="80">
+          </div>
+          <h3 class="feature-title">AI 기반 분석</h3>
+          <p class="feature-description">
+            첨단 AI 기술로 통화 내용을 분석하여<br>
+            보이스피싱 위험을 사전에 탐지합니다
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showFeatureInfo(featureId) {
+      // 기능 클릭 시 해당 페이지로 이동하는 로직 추가
+      const pages = {
+        'feature1': 'check.html',
+        'feature2': 'ex.html',
+        'feature3': 'analyze.html'
+      };
+      
+      window.location.href = pages[featureId];
+    }
+  </script>
+</body>
+</html>

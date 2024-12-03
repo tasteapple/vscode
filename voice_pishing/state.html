@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보이스피싱 신고하기 현황</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(145deg, #000000, #1a1a1a);
+      color: white;
+      font-family: 'Pretendard-Regular', sans-serif;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .navbar .logo {
+      list-style: none;
+    }
+
+    .navbar .logo a {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 30px;
+    }
+
+    .navbar .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .navbar .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .center-container {
+      width: 90%;
+      max-width: 1200px;
+      margin-top: 100px;
+      padding: 60px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .title-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      background: linear-gradient(45deg, #ffffff, #e6e6e6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      letter-spacing: 2px;
+    }
+
+    h3 {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.2em;
+      margin: 20px 0;
+    }
+
+    .info-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 20px 0;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .info-table th {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 15px;
+      font-size: 1.1em;
+      font-weight: 500;
+      text-align: center;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-table td {
+      padding: 15px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .info-table tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .info-table tr:nth-child(odd) {
+      background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    .info-table tr:hover td {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    #reportContainer {
+      margin: 20px 0;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    #reportContainer p {
+      color: rgba(255, 255, 255, 0.8);
+      margin: 10px 0;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    #reportContainer p:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(5px);
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      margin: 20px 0;
+    }
+
+    @font-face {
+      font-family: 'Pretendard-Regular';
+      src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+    }
+  </style>
+</head>
+
+<body onload="loadReports()">
+  <div class="navbar">
+    <div class="logo">
+      <li><a href="index.html">Voice Phishing Detector</a></li>
+    </div>
+    <ul class="nav-links">
+      <li><a href="check.html">조회하기</a></li>
+      <li><a href="ex.html">신고하기</a></li>
+      <li><a href="analyze.html">분석하기</a></li>
+    </ul>
+  </div>
+
+  <div class="center-container">
+    <div class="title-section">
+      <h1>신고하기 현황</h1>
+      <hr />
+      <h3>※ 현재까지 신고된 정보입니다. ※</h3>
+    </div>
+
+
+    <table class="info-table" id="reportContainer">
+      <thead>
+        <tr>
+          <th>전화번호</th>
+          <th>은행명</th>
+          <th>계좌번호</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 여기에 신고 정보가 추가됨 -->
+      </tbody>
+    </table>
+  </div>
+  <script>
+    const contractAddress = '0x2b2f3021DecF7aC8F7a64c0448C6a4A9c3AD774f'; // 배포된 컨트랙트 주소로 변경
+    const contractABI = [
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "reportId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "reporterName",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "reportDate",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "bool",
+            "name": "isVictim",
+            "type": "bool"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "bank",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "accountNumber",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "phoneNumber",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "reportContent",
+            "type": "string"
+          }
+        ],
+        "name": "ReportSubmitted",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_bank",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_accountNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_phoneNumber",
+            "type": "string"
+          }
+        ],
+        "name": "findReports",
+        "outputs": [
+          {
+            "internalType": "uint256[]",
+            "name": "",
+            "type": "uint256[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_reportId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getReport",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "reporterName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "reportDate",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isVictim",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "bank",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "accountNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "phoneNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "reportContent",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getTotalReports",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "reports",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "reporterName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "reportDate",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isVictim",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "bank",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "accountNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "phoneNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "reportContent",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_reporterName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_reportDate",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_region",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "_isVictim",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "_bank",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_accountNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_phoneNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_reportContent",
+            "type": "string"
+          }
+        ],
+        "name": "submitReport",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545")); // Ganache 로컬 네트워크 사용
+    let contract = new web3.eth.Contract(contractABI, contractAddress);
+
+    async function loadReports() {
+      try {
+        const totalReports = await contract.methods.getTotalReports().call();
+        const reportContainer = document.getElementById("reportContainer"); // tbody 태그를 대상으로 함
+
+        for (let i = 0; i < totalReports; i++) {
+          const report = await contract.methods.getReport(i).call();
+
+          // 새로운 행 생성
+          const row = document.createElement("tr");
+
+          // 전화번호 셀 생성
+          const phoneCell = document.createElement("td");
+          phoneCell.textContent = report.phoneNumber;
+
+          // 은행 셀 생성
+          const bankCell = document.createElement("td");
+          bankCell.textContent = report.bank;
+
+          // 계좌번호 셀 생성
+          const accountCell = document.createElement("td");
+          accountCell.textContent = report.accountNumber;
+
+          // 행에 각 셀 추가
+          row.appendChild(phoneCell);
+          row.appendChild(bankCell);
+          row.appendChild(accountCell);
+
+          // 테이블 본문에 행 추가
+          reportContainer.appendChild(row);
+        }
+      } catch (error) {
+        console.error("신고 정보를 불러오는 중 오류 발생:", error);
+      }
+    }
+
+  </script>
+</body>
+
+</html>

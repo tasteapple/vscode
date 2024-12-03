@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보이스피싱 음성 분석하기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(145deg, #000000, #1a1a1a);
+      color: white;
+      font-family: 'Pretendard-Regular', sans-serif;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .navbar .logo {
+      list-style: none;
+    }
+
+    .navbar .logo a {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 30px;
+    }
+
+    .navbar .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .navbar .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .center-container {
+      width: 90%;
+      max-width: 800px;
+      margin-top: 100px;
+      padding: 60px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      background: linear-gradient(45deg, #ffffff, #e6e6e6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      letter-spacing: 2px;
+    }
+
+    h3 {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.2em;
+      margin: 20px 0;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 15px;
+      margin: 20px 0;
+      transition: all 0.3s ease;
+    }
+
+    .container:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    input[type="file"] {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      width: 100%;
+      margin: 10px 0;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    textarea {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      font-size: 1em;
+      resize: vertical;
+      min-height: 150px;
+      transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px 40px;
+      border-radius: 8px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 20px auto;
+      display: block;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.7);
+      font-style: italic;
+      margin: 15px 0;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      margin: 20px 0;
+    }
+
+    .result-box {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 1.1em;
+      width: 100%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .result-box.warning {
+      background: rgba(255, 59, 48, 0.1);
+      border: 1px solid rgba(255, 59, 48, 0.3);
+      color: #ff3b30;
+    }
+
+    .result-box.success {
+      background: rgba(52, 199, 89, 0.1);
+      border: 1px solid rgba(52, 199, 89, 0.3);
+      color: #34c759;
+    }
+
+    @font-face {
+      font-family: 'Pretendard-Regular';
+      src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+    }
+  </style>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보이스피싱 음성 분석하기</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(145deg, #000000, #1a1a1a);
+      color: white;
+      font-family: 'Pretendard-Regular', sans-serif;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .navbar .logo {
+      list-style: none;
+    }
+
+    .navbar .logo a {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 30px;
+    }
+
+    .navbar .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .navbar .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .center-container {
+      width: 90%;
+      max-width: 800px;
+      margin-top: 100px;
+      padding: 60px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      background: linear-gradient(45deg, #ffffff, #e6e6e6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      letter-spacing: 2px;
+    }
+
+    h3 {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.2em;
+      margin: 20px 0;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 15px;
+      margin: 20px 0;
+      transition: all 0.3s ease;
+    }
+
+    .container:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    input[type="file"] {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      width: 100%;
+      margin: 10px 0;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    textarea {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      font-size: 1em;
+      resize: vertical;
+      min-height: 150px;
+      transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px 40px;
+      border-radius: 8px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 20px auto;
+      display: block;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.7);
+      font-style: italic;
+      margin: 15px 0;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      margin: 20px 0;
+    }
+
+    .result-box {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 1.1em;
+      width: 100%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .result-box.warning {
+      background: rgba(255, 59, 48, 0.1);
+      border: 1px solid rgba(255, 59, 48, 0.3);
+      color: #ff3b30;
+    }
+
+    .result-box.success {
+      background: rgba(52, 199, 89, 0.1);
+      border: 1px solid rgba(52, 199, 89, 0.3);
+      color: #34c759;
+    }
+
+    .result-box.caution{
+      background: rgba(255, 159, 10, 0.1);
+      border: 1px solid rgba(255, 159, 10, 0.3);
+      color: #ff9f0a;
+    }
+
+    @font-face {
+      font-family: 'Pretendard-Regular';
+      src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <li><a href="index.html">Voice Phishing Detector</a></li>
+    </div>
+    <ul class="nav-links">
+      <li><a href="check.html">조회하기</a></li>
+      <li><a href="ex.html">신고하기</a></li>
+      <li><a href="analyze.html">분석하기</a></li>
+    </ul>
+  </div>
+
+  <div class="center-container">
+    <h1>보이스피싱 음성 분석하기</h1>
+    <hr/>
+    <h3>음성 분석을 위해 통화 파일(.mp4)을 업로드해주세요.</h3>
+    
+    <div class="container">
+      <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="fileupload">파일 선택</label>
+        <input type="file" id="fileupload" name="uploadedfile" multiple>
+      </form>
+    </div>
+
+    <p>※ 통화 파일 업로드가 어려울 경우, 아래에 통화 내용을 입력해주세요.</p>
+    <textarea id="transcript" placeholder="통화 내용을 입력하세요..."></textarea>
+    <button type="button" id="analyze" class="btn" onclick="analyzeCall()">분석</button>
+    
+    <div id="result" class="result-box"></div>
+  </div>
+    <script>
+      function analyzeCall() {
+        const transcript = document.getElementById("transcript").value;
+        const randomPercent = Math.floor(Math.random() * 100);
+        const resultDiv = document.getElementById("result");
+        
+        resultDiv.style.display = "block";
+        resultDiv.style.textAlign = "center";
+        
+        let mainMessage = `<div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">보이스피싱 가능성: ${randomPercent}%</div>`;
+        let warningMessage = '';
+        let detailMessage = '';
+     
+        if (randomPercent >= 70) {
+            // 높은 위험
+            resultDiv.className = "result-box warning";
+            warningMessage = `<div style="color: #ff3b30; font-size: 14px; margin: 15px 0;">
+                즉시 112에 신고하거나 금융기관에 확인하세요.<br>
+                절대 민감한 정보를 제공하지 마세요.</div>`;
+            detailMessage = "해당 통화는 보이스피싱일 가능성이 매우 높습니다. 즉각적인 대응이 필요합니다.";
+        } 
+        else if (randomPercent > 50 && randomPercent <= 69) {
+          // 중간 위험
+          resultDiv.className = "result-box caution";
+          warningMessage = `<div style="color: #ff9f0a; font-size: 14px; margin: 15px 0;">
+              의심스러운 정황이 발견되었습니다.<br>
+              주의가 필요합니다.</div>`;
+          detailMessage = "의심스러운 요소가 발견되었습니다. 추가 확인이 필요하며, 민감한 정보 제공에 주의하세요.";
+       }
+        else {
+            // 낮은 위험
+            resultDiv.className = "result-box success";
+            warningMessage = `<div style="color: #34c759; font-size: 14px; margin: 15px 0;">
+                현재까지 안전한 것으로 판단됩니다.</div>`;
+            detailMessage = "현재까지 분석된 내용에서는 보이스피싱의 특징이 거의 발견되지 않았습니다. 하지만 항상 주의하시기 바랍니다.";
+        }
+     
+        resultDiv.innerHTML = `
+            ${mainMessage}
+            ${warningMessage}
+            <div style="font-size: 14px; margin-top: 10px; opacity: 0.8;">
+                ${detailMessage}
+            </div>
+        `;
+     }
+    </script>
+</body>
+</html>

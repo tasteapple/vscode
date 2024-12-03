@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보이스피싱 조회하기</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(145deg, #000000, #1a1a1a);
+      color: white;
+      font-family: 'Pretendard-Regular', sans-serif;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .navbar .logo {
+      list-style: none;
+    }
+
+    .navbar .logo a {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 30px;
+    }
+
+    .navbar .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .navbar .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .center-container {
+      width: 90%;
+      max-width: 800px;
+      margin-top: 100px;
+      padding: 60px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      background: linear-gradient(45deg, #ffffff, #e6e6e6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      letter-spacing: 2px;
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.1em;
+      margin-bottom: 30px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    label {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1em;
+      margin-bottom: 5px;
+      text-align: left;
+    }
+
+    select,
+    input {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      font-size: 1em;
+      transition: all 0.3s ease;
+      margin-top: 5px;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 35px;
+    }
+
+    select option {
+      background-color: #1a1a1a;
+      color: white;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px 40px;
+      border-radius: 8px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 20px auto;
+      display: block;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    #result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      display: none;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      margin: 20px 0;
+    }
+
+    @font-face {
+      font-family: 'Pretendard-Regular';
+      src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <li><a href="index.html">Voice Phishing Detector</a></li>
+    </div>
+    <ul class="nav-links">
+      <li><a href="check.html">조회하기</a></li>
+      <li><a href="ex.html">신고하기</a></li>
+      <li><a href="analyze.html">분석하기</a></li>
+    </ul>
+  </div>
+
+  <div class="center-container">
+    <h1>보이스피싱 조회하기</h1>
+    <hr />
+    <p>아래에 의심 정보를 입력해주시면 조회가 가능합니다.</p>
+
+    <form id="lookupForm">
+      <div class="form-group">
+        <label for="bank">계좌번호</label>
+        <select id="bank" name="bank">
+          <option value="은행을 선택하세요.">은행을 선택하세요.</option>
+          <option value="우체국">우체국</option>
+          <option value="국민">국민</option>
+          <option value="농협">농협</option>
+          <option value="신한">신한</option>
+          <option value="우리">우리</option>
+          <option value="하나">하나</option>
+          <option value="기업">기업</option>
+          <option value="새마을금고">새마을금고</option>
+          <option value="토스뱅크">토스뱅크</option>
+          <option value="케이뱅크">케이뱅크</option>
+          <option value="카카오뱅크">카카오뱅크</option>
+          <option value="기타">기타</option>
+        </select>
+        <input type="text" id="accountNumber" name="accountNumber" pattern="\d{1,20}" maxlength="20"
+          placeholder="'-' 없이 입력" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phoneNumber">전화번호</label>
+        <input type="text" id="phoneNumber" name="phoneNumber" placeholder="'-'도 입력" required>
+      </div>
+
+      <button type="button" id="submit" onclick="lookupReport()" class="btn">조회</button>
+    </form>
+
+    <div id="result">
+  </div>
+  <script>
+    async function lookupReport() {
+      const web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
+      const contractAddress = '0x2b2f3021DecF7aC8F7a64c0448C6a4A9c3AD774f'; // 배포된 컨트랙트 주소로 변경
+      const contractABI = [
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "reportId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "reporterName",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "reportDate",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "region",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "bool",
+              "name": "isVictim",
+              "type": "bool"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "bank",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "accountNumber",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "phoneNumber",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "reportContent",
+              "type": "string"
+            }
+          ],
+          "name": "ReportSubmitted",
+          "type": "event"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_reporterName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_reportDate",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_region",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "_isVictim",
+              "type": "bool"
+            },
+            {
+              "internalType": "string",
+              "name": "_bank",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_accountNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_phoneNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_reportContent",
+              "type": "string"
+            }
+          ],
+          "name": "submitReport",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_bank",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_accountNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_phoneNumber",
+              "type": "string"
+            }
+          ],
+          "name": "findReports",
+          "outputs": [
+            {
+              "internalType": "uint256[]",
+              "name": "",
+              "type": "uint256[]"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_reportId",
+              "type": "uint256"
+            }
+          ],
+          "name": "getReport",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "reporterName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "reportDate",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "region",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "isVictim",
+              "type": "bool"
+            },
+            {
+              "internalType": "string",
+              "name": "bank",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "accountNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "phoneNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "reportContent",
+              "type": "string"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "getTotalReports",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "name": "reports",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "reporterName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "reportDate",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "region",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "isVictim",
+              "type": "bool"
+            },
+            {
+              "internalType": "string",
+              "name": "bank",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "accountNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "phoneNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "reportContent",
+              "type": "string"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ];
+
+      const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+      const bank = document.getElementById("bank").value;
+      const accountNumber = document.getElementById("accountNumber").value;
+      const phoneNumber = document.getElementById("phoneNumber").value;
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.display = "block";
+
+      try {
+        const totalReports = await contract.methods.getTotalReports().call();
+        let matchCount = 0;
+        let matchedReports = [];
+
+        for (let i = 0; i < totalReports; i++) {
+          const report = await contract.methods.getReport(i).call();
+          if (report.bank === bank && report.accountNumber === accountNumber && report.phoneNumber === phoneNumber) {
+            matchCount++;
+            matchedReports.push(report);
+          }
+        }
+
+        if (matchCount > 0) {
+          resultDiv.innerHTML = `<p style="color: red;">조회 결과: 총 ${matchCount}개의 신고 내역이 있습니다.</p>`;
+          matchedReports.forEach((report) => {
+            resultDiv.innerHTML += `
+                <div style="border: 1px solid #a00000; padding: 10px; margin-top: 10px;">
+                  <p><strong>신고 내역</strong></p>
+                  <p><strong>은행:</strong> ${report.bank}</p>
+                  <p><strong>계좌번호:</strong> ${report.accountNumber}</p>
+                  <p><strong>전화번호:</strong> ${report.phoneNumber}</p>
+                </div>
+              `;
+          });
+        } else {
+          resultDiv.innerHTML = `<p style="color: green;">조회 결과: 신고 내역이 없습니다.</p>`;
+        }
+      } catch (error) {
+        console.error("신고 정보를 불러오는 중 오류 발생:", error);
+        resultDiv.innerHTML = `<p style="color: red;">오류가 발생했습니다. 관리자에게 문의하세요.</p>`;
+      }
+    }
+  </script>
+</body>
+
+</html>

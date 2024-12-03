@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보이스피싱 신고하기</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(145deg, #000000, #1a1a1a);
+      color: white;
+      font-family: 'Pretendard-Regular', sans-serif;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .navbar .logo {
+      list-style: none;
+    }
+
+    .navbar .logo a {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 30px;
+    }
+
+    .navbar .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .navbar .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .center-container {
+      width: 90%;
+      max-width: 800px;
+      margin-top: 100px;
+      margin-bottom: 50px;
+      padding: 60px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      background: linear-gradient(45deg, #ffffff, #e6e6e6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      letter-spacing: 2px;
+    }
+
+    h3 {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+
+    form {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1em;
+      text-align: left;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      font-size: 1em;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    select option {
+      background-color: #1a1a1a;
+      color: white;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    input[type="radio"] {
+      margin-right: 8px;
+    }
+
+    .report-box {
+      height: 150px;
+      resize: none;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px 24px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px auto;
+      /* 중앙 정렬을 위한 margin auto */
+      display: block;
+      /* 블록 레벨 요소로 변경 */
+      width: 80%;
+      /* 버튼 너비 확장 */
+      max-width: 400px;
+      /* 최대 너비 제한 */
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* 폼 제출 버튼을 위한 컨테이너 */
+    .button-container {
+      text-align: center;
+      width: 100%;
+      margin: 20px 0;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      margin: 30px 0;
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9em;
+      margin: 20px 0;
+    }
+
+    .statelink {
+      display: none;
+    }
+
+    ::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    @font-face {
+      font-family: 'Pretendard-Regular';
+      src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HTML 구조는 동일하게 유지 -->
+  <div class="navbar">
+    <div class="logo">
+      <li><a href="index.html">Voice Phishing Detector</a></li>
+    </div>
+    <ul class="nav-links">
+      <li><a href="check.html">조회하기</a></li>
+      <li><a href="ex.html">신고하기</a></li>
+      <li><a href="analyze.html">분석하기</a></li>
+    </ul>
+  </div>
+
+  <div class="center-container">
+    <h1>보이스피싱 신고하기</h1>
+    <hr />
+    <h3>아래에 의심 정보를 제출해주시면 신고가 완료됩니다.</h3>
+
+    <form id="reportForm">
+      <!-- 폼 내용은 동일하게 유지 -->
+      <label for="reporterName">신고자 이름</label>
+      <input type="text" id="reporterName" required>
+
+      <label for="reportDate">신고 일자</label>
+      <input type="date" id="reportDate" min="1900-01-01" max="2024-11-30" required>
+
+      <label for="region">발생 지역</label>
+      <select id="region" name="region" required>
+        <option value="">전화가 걸려 온 지역</option>
+        <option value="서울">서울(02)</option>
+        <option value="서울">서울(02)</option>
+        <option value="경기">경기(031)</option>
+        <option value="인천">인천(032)</option>
+        <option value="강원">강원(033)</option>
+        <option value="충남">충남(041)</option>
+        <option value="대전">대전(042)</option>
+        <option value="충북">충북(043)</option>
+        <option value="세종">세종(044)</option>
+        <option value="부산">부산(051)</option>
+        <option value="울산">울산(052)</option>
+        <option value="대구">대구(053)</option>
+        <option value="경북">경북(054)</option>
+        <option value="경남">경남(055)</option>
+        <option value="전남">전남(061)</option>
+        <option value="광주">광주(062)</option>
+        <option value="전북">전북(063)</option>
+        <option value="제주">제주(064)</option>
+        <option value="기타">기타</option>
+      </select>
+
+      <label>귀하는 직접적인 피해를 입으셨습니까? (사기범에게 계좌 이체 등)</label>
+      <div class="radio-group">
+        <label style="display: inline;">
+          <input type="radio" id="isVictimYes" name="isVictim" value="yes">예
+        </label>
+        <label style="display: inline;">
+          <input type="radio" id="isVictimNo" name="isVictim" value="no">아니오
+        </label>
+      </div>
+
+      <label for="bank">은행</label>
+      <select id="bank" name="bank" required>
+        <option value="">은행</option>
+        <option value="우체국">우체국</option>
+        <option value="국민">국민</option>
+        <option value="농협">농협</option>
+        <option value="신한">신한</option>
+        <option value="우리">우리</option>
+        <option value="하나">하나</option>
+        <option value="기업">기업</option>
+        <option value="새마을금고">새마을금고</option>
+        <option value="토스뱅크">토스뱅크</option>
+        <option value="케이뱅크">케이뱅크</option>
+        <option value="카카오뱅크">카카오뱅크</option>
+        <option value="기타">기타</option>
+      </select>
+
+      <label for="accountNumber">계좌번호</label>
+      <input type="text" id="accountNumber" pattern="\d{1,20}" maxlength="20" placeholder="'-' 없이 입력" required>
+
+      <label for="phoneNumber">전화번호</label>
+      <input type="text" id="phoneNumber" name="phone" placeholder="'-'도 입력">
+
+      <label for="reportContent">신고내용</label>
+      <textarea id="reportContent" class="report-box" placeholder="750자 내외로 신고 내용을 작성해주세요." maxlength="750"
+        required></textarea>
+
+      <div class="button-container">
+        <button type="button" id="submit" class="btn" onclick="submitReport()">신고</button>
+      </div>
+
+    </form>
+
+    <hr />
+    <p>※ 제출하신 정보는 아래의 신고하기 현황 버튼을 눌러 확인해주세요.</p>
+
+    <!-- 신고현황 버튼 -->
+    <div class="button-container">
+      <button type="button" id="state" class="btn" onclick="document.getElementById('stateLink').click();">신고현황</button>
+      <a href="state.html" id="stateLink" class="statelink"></a>
+    </div>
+  </div>
+  <script>
+    const contractAddress = '0x2b2f3021DecF7aC8F7a64c0448C6a4A9c3AD774f'; // 배포된 컨트랙트 주소로 변경
+    const contractABI = [
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "reportId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "reporterName",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "reportDate",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "bool",
+            "name": "isVictim",
+            "type": "bool"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "bank",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "accountNumber",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "phoneNumber",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "reportContent",
+            "type": "string"
+          }
+        ],
+        "name": "ReportSubmitted",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_bank",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_accountNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_phoneNumber",
+            "type": "string"
+          }
+        ],
+        "name": "findReports",
+        "outputs": [
+          {
+            "internalType": "uint256[]",
+            "name": "",
+            "type": "uint256[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_reportId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getReport",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "reporterName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "reportDate",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isVictim",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "bank",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "accountNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "phoneNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "reportContent",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getTotalReports",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "reports",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "reporterName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "reportDate",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isVictim",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "bank",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "accountNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "phoneNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "reportContent",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_reporterName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_reportDate",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_region",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "_isVictim",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "_bank",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_accountNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_phoneNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_reportContent",
+            "type": "string"
+          }
+        ],
+        "name": "submitReport",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
+    let web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545")); // Ganache 로컬 네트워크 사용
+    let contract = new web3.eth.Contract(contractABI, contractAddress);
+
+    async function submitReport() {
+      const reporterName = document.getElementById('reporterName').value;
+      const reportDate = document.getElementById('reportDate').value;
+      const region = document.getElementById('region').value;
+      const isVictim = document.querySelector('input[name="isVictim"]:checked').value === 'yes';
+      const bank = document.getElementById('bank').value;
+      const accountNumber = document.getElementById('accountNumber').value;
+      const phoneNumber = document.getElementById('phoneNumber').value;
+      const reportContent = document.getElementById('reportContent').value;
+
+      const accounts = await web3.eth.getAccounts();
+      const sender = accounts[0];
+
+      contract.methods.submitReport(reporterName, reportDate, region, isVictim, bank, accountNumber, phoneNumber, reportContent)
+        .send({ from: sender, gas: 3000000 })
+        .then(result => {
+          alert('신고가 성공적으로 제출되었습니다.');
+        })
+        .catch(error => {
+          console.error(error);
+          alert('신고 제출에 실패하였습니다.');
+        });
+    }
+  </script>
+</body>
+
+</html>
